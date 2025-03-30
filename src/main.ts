@@ -1,9 +1,10 @@
 import * as readline from 'readline-sync';
+import { AppDataSource } from './data-source';
 import { createCategory, listCategories, searchCategory, updateCategory, removeCategory } from './controllers/categoryController';
 import { createProduct, listProducts, searchProduct, updateProduct, removeProduct } from './controllers/productController';
 import { listCategoriesWithProducts } from './listReports';
 
-function menuCategorias(): void {
+async function menuCategorias(): Promise<void> {
   let exit = false;
   while (!exit) {
     console.log('\n--- Menu Categorias ---');
@@ -17,19 +18,19 @@ function menuCategorias(): void {
 
     switch (opcao) {
       case '1':
-        createCategory();
+        await createCategory();
         break;
       case '2':
-        listCategories();
+        await listCategories();
         break;
       case '3':
-        searchCategory();
+        await searchCategory();
         break;
       case '4':
-        updateCategory();
+        await updateCategory();
         break;
       case '5':
-        removeCategory();
+        await removeCategory();
         break;
       case '0':
         exit = true;
@@ -40,7 +41,7 @@ function menuCategorias(): void {
   }
 }
 
-function menuProdutos(): void {
+async function menuProdutos(): Promise<void> {
   let exit = false;
   while (!exit) {
     console.log('\n--- Menu Produtos ---');
@@ -54,19 +55,19 @@ function menuProdutos(): void {
 
     switch (opcao) {
       case '1':
-        createProduct();
+        await createProduct();
         break;
       case '2':
-        listProducts();
+        await listProducts();
         break;
       case '3':
-        searchProduct();
+        await searchProduct();
         break;
       case '4':
-        updateProduct();
+        await updateProduct();
         break;
       case '5':
-        removeProduct();
+        await removeProduct();
         break;
       case '0':
         exit = true;
@@ -77,33 +78,44 @@ function menuProdutos(): void {
   }
 }
 
-function mainMenu(): void {
-  let exit = false;
-  while (!exit) {
-    console.log('\n=== Sistema de Gerenciamento de Inventário ===');
-    console.log('1 - Gestão de Categorias');
-    console.log('2 - Gestão de Produtos');
-    console.log('3 - Listar Categorias com Produtos');
-    console.log('0 - Sair');
-    const opcao = readline.question('Escolha uma opcao: ');
+async function main(): Promise<void> {
+  try {
+    await AppDataSource.initialize();
+    console.log('Banco de dados inicializado.');
 
-    switch (opcao) {
-      case '1':
-        menuCategorias();
-        break;
-      case '2':
-        menuProdutos();
-        break;
-      case '3':
-        listCategoriesWithProducts();
-        break;
-      case '0':
-        exit = true;
-        break;
-      default:
-        console.log('Opção inválida!');
+    let exit = false;
+    while (!exit) {
+      console.log('\n=== Sistema de Gerenciamento de Inventário ===');
+      console.log('1 - Gestão de Categorias');
+      console.log('2 - Gestão de Produtos');
+      console.log('3 - Listar Categorias com Produtos');
+      console.log('0 - Sair');
+      const opcao = readline.question('Escolha uma opcao: ');
+
+      switch (opcao) {
+        case '1':
+          await menuCategorias();
+          break;
+        case '2':
+          await menuProdutos();
+          break;
+        case '3':
+          await listCategoriesWithProducts(); // Certifique-se de que esta função está sendo chamada
+          break;
+        case '0':
+          exit = true;
+          break;
+        default:
+          console.log('Opção inválida!');
+      }
     }
+
+    console.log('Programa encerrado.');
+  } catch (error) {
+    console.error('Erro ao inicializar o banco de dados:', error);
+  } finally {
+    await AppDataSource.destroy();
   }
 }
 
-mainMenu();
+main();

@@ -11,7 +11,10 @@
   "license": "ISC",
   "dependencies": {
     "@types/node": "^22.13.14",
-    "readline-sync": "^1.4.10"
+    "readline-sync": "^1.4.10",
+    "reflect-metadata": "^0.2.2",
+    "sqlite3": "^5.1.6",
+    "typeorm": "^0.3.17"
   },
   "devDependencies": {
     "@types/readline-sync": "^1.4.8"
