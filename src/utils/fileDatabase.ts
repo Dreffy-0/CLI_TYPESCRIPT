@@ -20,7 +20,6 @@ export function loadData(): Category[] {
     return [];
   }
 
-  // Certifique-se de que o arquivo é lido com a codificação correta
   const fileContent = fs.readFileSync(filePath, { encoding: 'utf-8' });
   const sections = fileContent.split('\n## ').map((section, index) => (index === 0 ? section : '## ' + section).trim());
   const categories: Category[] = [];
@@ -69,6 +68,5 @@ export function saveData(categories: Category[]): void {
     })
     .join('\n\n');
 
-  // Certifique-se de que o arquivo é salvo com a codificação correta
   fs.writeFileSync(filePath, content, { encoding: 'utf-8' });
 }

@@ -100,7 +100,7 @@ async function main(): Promise<void> {
           await menuProdutos();
           break;
         case '3':
-          await listCategoriesWithProducts(); // Certifique-se de que esta função está sendo chamada
+          await listCategoriesWithProducts();
           break;
         case '0':
           exit = true;
