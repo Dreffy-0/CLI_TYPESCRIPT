@@ -1,0 +1,28 @@
+# Node modules
+node_modules/
+
+# Diretório de build
+dist/
+
+# Arquivos de log
+*.log
+
+# Arquivos de ambiente
+.env
+
+# Diretórios de sistema
+.DS_Store
+Thumbs.db
+
+# Arquivos temporários do editor
+*.swp
+*.swo
+
+# Configurações de IDEs
+.vscode/
+.idea/
+
+# Outros arquivos temporários
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
