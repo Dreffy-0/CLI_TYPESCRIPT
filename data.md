@@ -7,4 +7,4 @@
 - Mesa | Mesa de jantar | 500.00 | 10
 
 ## Livro
-- Kama Sutra | Instru��es para as artes Vinisticas | 49.99 | 3
+- Kama Sutra | Instruções para as artes Vinisticas | 49.99 | 3

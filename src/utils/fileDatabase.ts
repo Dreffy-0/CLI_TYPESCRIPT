@@ -20,8 +20,9 @@ export function loadData(): Category[] {
     return [];
   }
 
-  const fileContent = fs.readFileSync(filePath, 'utf-8');
-  const sections = fileContent.split('\n## ').map((section, index) => (index === 0 ? section : '## ' + section).trim()); // Corrigido para dividir corretamente as categorias
+  // Certifique-se de que o arquivo é lido com a codificação correta
+  const fileContent = fs.readFileSync(filePath, { encoding: 'utf-8' });
+  const sections = fileContent.split('\n## ').map((section, index) => (index === 0 ? section : '## ' + section).trim());
   const categories: Category[] = [];
 
   for (const section of sections) {
@@ -68,5 +69,6 @@ export function saveData(categories: Category[]): void {
     })
     .join('\n\n');
 
-  fs.writeFileSync(filePath, content, 'utf-8');
+  // Certifique-se de que o arquivo é salvo com a codificação correta
+  fs.writeFileSync(filePath, content, { encoding: 'utf-8' });
 }
