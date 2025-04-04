@@ -1,105 +1,143 @@
+import { AppDataSource } from '../data-source';
+import { Product } from '../models/entities/Product';
+import { Category } from '../models/entities/Category';
 import * as readline from 'readline-sync';
-import { loadData, saveData, Product } from '../utils/fileDatabase';
 
-export function createProduct(): void {
+let productIdCounter = 1;
+
+export const getProducts = async () => {
+  const productRepository = AppDataSource.getRepository(Product);
+  return await productRepository.find();
+};
+
+export async function createProduct(): Promise<void> {
+  const productRepository = AppDataSource.getRepository(Product);
+  const categoryRepository = AppDataSource.getRepository(Category);
+
   console.log('\n-- Criar Produto --');
   const nome = readline.question('Nome: ');
   const descricao = readline.question('Descricao: ');
-  const preco = parseFloat(readline.question('Preco: '));
-  const quantidade = parseInt(readline.question('Quantidade: '), 10);
+  const preco = Number(readline.question('Preco: '));
+  const quantidade = Number(readline.question('Quantidade: '));
 
-  const categories = loadData();
-  if (categories.length === 0) {
-    console.log('Nenhuma categoria cadastrada. Crie uma categoria primeiro.');
+  const categorias = await categoryRepository.find();
+  if (categorias.length === 0) {
+    console.log('Nenhuma categoria disponível. Crie uma categoria antes de adicionar produtos.');
     return;
   }
 
-  categories.forEach((c, index) => console.log(`${index + 1}. ${c.nome}`));
-  const categoryIndex = parseInt(readline.question('Escolha o número da categoria: '), 10) - 1;
-
-  if (categoryIndex < 0 || categoryIndex >= categories.length) {
+  console.table(categorias, ['id', 'nome']);
+  const categoriaId = Number(readline.question('Digite o ID da categoria para associar: '));
+  const categoria = await categoryRepository.findOne({ where: { id: categoriaId } });
+  if (!categoria) {
     console.log('Categoria inválida.');
     return;
   }
 
-  categories[categoryIndex].produtos.push({ nome, descricao, preco, quantidade });
-  saveData(categories);
+  const product = productRepository.create({ nome, descricao, preco, quantidade, categoria });
+  await productRepository.save(product); // Salva o produto no banco de dados
   console.log('Produto criado com sucesso!');
 }
 
-export function listProducts(): void {
+export async function listProducts(): Promise<void> {
+  const productRepository = AppDataSource.getRepository(Product);
+
   console.log('\n-- Listar Produtos --');
-  const categories = loadData();
-  categories.forEach((category) => {
-    console.log(`\nCategoria: ${category.nome}`);
-    if (category.produtos.length === 0) {
-      console.log('  Nenhum produto cadastrado.');
-    } else {
-      category.produtos.forEach((p) =>
-        console.log(`  - ${p.nome} | ${p.descricao} | ${p.preco.toFixed(2)} | ${p.quantidade}`)
-      );
-    }
-  });
+  const products = await productRepository.find({ relations: ['categoria'] }); // Inclui a categoria relacionada
+
+  if (products.length === 0) {
+    console.log('Nenhum produto cadastrado.');
+    return;
+  }
+
+  // Ajusta a exibição para mostrar o nome da categoria corretamente
+  const formattedProducts = products.map(product => ({
+    id: product.id,
+    nome: product.nome,
+    descricao: product.descricao,
+    preco: product.preco,
+    quantidade: product.quantidade,
+    categoria: product.categoria ? product.categoria.nome : 'Sem categoria', // Exibe "Sem categoria" se não houver categoria associada
+    dataCriacao: product.dataCriacao,
+  }));
+
+  console.table(formattedProducts);
 }
 
-export function searchProduct(): void {
+export async function searchProduct(): Promise<void> {
+  const productRepository = AppDataSource.getRepository(Product);
+
   console.log('\n-- Buscar Produto --');
-  const nome = readline.question('Digite o nome do produto: ');
+  console.log('Escolha o critério de busca:');
+  console.log('1 - Buscar por ID do produto');
+  console.log('2 - Buscar por nome do produto');
+  console.log('3 - Buscar por ID da categoria');
+  const option = readline.question('Opção: ');
 
-  const categories = loadData();
-  const produtos = categories.flatMap((c) => c.produtos);
-  const produto = produtos.find((p) => p.nome.toLowerCase() === nome.toLowerCase());
-  if (!produto) {
-    console.log('Produto não encontrado.');
-    return;
+  let foundProducts: Product[] = [];
+
+  switch (option) {
+    case '1':
+      const id = Number(readline.question('Digite o ID do produto: '));
+      const productById = await productRepository.findOne({ where: { id }, relations: ['categoria'] });
+      if (productById) {
+        foundProducts.push(productById);
+      }
+      break;
+    case '2':
+      const name = readline.question('Digite o nome do produto: ');
+      foundProducts = await productRepository.find({ where: { nome: name }, relations: ['categoria'] });
+      break;
+    case '3':
+      const categoryId = Number(readline.question('Digite o ID da categoria: '));
+      foundProducts = await productRepository.find({ where: { categoria: { id: categoryId } }, relations: ['categoria'] });
+      break;
+    default:
+      console.log('Opção inválida.');
+      return;
   }
 
-  console.log(`Produto encontrado: ${produto.nome}`);
-  console.log(`Descrição: ${produto.descricao}`);
-  console.log(`Preço: ${produto.preco.toFixed(2)}`);
-  console.log(`Quantidade: ${produto.quantidade}`);
+  if (foundProducts.length > 0) {
+    console.table(foundProducts);
+  } else {
+    console.log('Nenhum produto encontrado com o critério informado.');
+  }
 }
 
-export function updateProduct(): void {
-  console.log('\n-- Atualizar Produto --');
-  const nome = readline.question('Digite o nome do produto: ');
+export async function updateProduct(): Promise<void> {
+  const productRepository = AppDataSource.getRepository(Product);
 
-  const categories = loadData();
-  const category = categories.find((c) => c.produtos.some((p) => p.nome.toLowerCase() === nome.toLowerCase()));
-  if (!category) {
-    console.log('Produto não encontrado.');
+  console.log('\n-- Atualizar Produto --');
+  const id = Number(readline.question('Digite o ID do produto: '));
+  const product = await productRepository.findOne({ where: { id } });
+  if (!product) {
+    console.log('Produto nao encontrado.');
     return;
   }
+  const novoNome = readline.question(`Novo nome (${product.nome}): `) || product.nome;
+  const novaDescricao = readline.question(`Nova descrição (${product.descricao}): `) || product.descricao;
+  const novoPreco = readline.question(`Novo preço (${product.preco}): `);
+  const novaQuantidade = readline.question(`Nova quantidade (${product.quantidade}): `);
 
-  const produto = category.produtos.find((p) => p.nome.toLowerCase() === nome.toLowerCase());
-  if (!produto) return;
-
-  const novoNome = readline.question(`Novo nome (${produto.nome}): `) || produto.nome;
-  const novaDescricao = readline.question(`Nova descrição (${produto.descricao}): `) || produto.descricao;
-  const novoPreco = readline.question(`Novo preço (${produto.preco}): `);
-  const novaQuantidade = readline.question(`Nova quantidade (${produto.quantidade}): `);
-
-  produto.nome = novoNome;
-  produto.descricao = novaDescricao;
-  if (novoPreco) produto.preco = parseFloat(novoPreco);
-  if (novaQuantidade) produto.quantidade = parseInt(novaQuantidade, 10);
-
-  saveData(categories);
+  product.nome = novoNome;
+  product.descricao = novaDescricao;
+  if (novoPreco) product.preco = Number(novoPreco);
+  if (novaQuantidade) product.quantidade = Number(novaQuantidade);
+  product.dataAtualizacao = new Date();
+  await productRepository.save(product);
   console.log('Produto atualizado com sucesso!');
 }
 
-export function removeProduct(): void {
-  console.log('\n-- Remover Produto --');
-  const nome = readline.question('Digite o nome do produto: ');
+export async function removeProduct(): Promise<void> {
+  const productRepository = AppDataSource.getRepository(Product);
 
-  const categories = loadData();
-  const category = categories.find((c) => c.produtos.some((p) => p.nome.toLowerCase() === nome.toLowerCase()));
-  if (!category) {
-    console.log('Produto não encontrado.');
+  console.log('\n-- Remover Produto --');
+  const id = Number(readline.question('Digite o ID do produto: '));
+  const product = await productRepository.findOne({ where: { id } });
+  if (!product) {
+    console.log('Produto nao encontrado.');
     return;
   }
-
-  category.produtos = category.produtos.filter((p) => p.nome.toLowerCase() !== nome.toLowerCase());
-  saveData(categories);
+  await productRepository.remove(product);
   console.log('Produto removido com sucesso!');
 }

@@ -1,26 +1,25 @@
-import { loadData } from './utils/fileDatabase';
+import { AppDataSource } from './data-source';
+import { Category } from './models/entities/Category';
 
 export async function listCategoriesWithProducts(): Promise<void> {
-  const categories = loadData();
+  const categoryRepository = AppDataSource.getRepository(Category);
+
+  console.log('\n-- Categorias com Produtos --');
+  const categories = await categoryRepository.find({ relations: ['produtos'] }); // Inclui os produtos relacionados
 
   if (categories.length === 0) {
     console.log('Nenhuma categoria cadastrada.');
     return;
   }
 
-  categories.forEach((category) => {
-    console.log(`\nCategoria: ${category.nome}`);
-    if (category.produtos.length === 0) {
-      console.log('  Nenhum produto cadastrado para esta categoria.');
+  categories.forEach(category => {
+    console.log(`Categoria: ${category.nome}`);
+    if (category.produtos && category.produtos.length > 0) {
+      category.produtos.forEach(product => {
+        console.log(`  - Produto: ${product.nome}, Preço: ${product.preco}, Quantidade: ${product.quantidade}`);
+      });
     } else {
-      console.table(
-        category.produtos.map((p) => ({
-          Nome: p.nome,
-          Descrição: p.descricao,
-          Preço: p.preco.toFixed(2),
-          Quantidade: p.quantidade,
-        }))
-      );
+      console.log('  Nenhum produto associado.');
     }
   });
 }

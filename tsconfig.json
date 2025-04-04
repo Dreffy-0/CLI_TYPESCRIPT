@@ -1,13 +1,15 @@
 {
-    "compilerOptions": {
-        "target": "ES6", // Define o alvo como ES6
-        "module": "commonjs", // Usa o sistema de módulos CommonJS
-        "outDir": "./dist", // Diretório de saída
-        "rootDir": "./src", // Diretório raiz
-        "strict": true, // Ativa verificações estritas
-        "esModuleInterop": true, // Permite interoperabilidade com módulos ES
-        "skipLibCheck": true, // Ignora verificação de tipos em arquivos de definição
-        "experimentalDecorators": true, // Habilita decoradores
-        "emitDecoratorMetadata": true // Emite metadados para decoradores
-    }
+  "compilerOptions": {
+    "target": "ES6", // Necessário para suportar decoradores
+    "module": "commonjs",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true, // Habilita suporte a decoradores
+    "emitDecoratorMetadata": true, // Emite metadados para decoradores
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }
