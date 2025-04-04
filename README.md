@@ -1,8 +1,6 @@
-<<<<<<< HEAD
-CLI v.1
-=======
-# CLI V.2
->>>>>>> b0a65dc0fb43283b894c8c9409ecbc86b2df5385
+# CLI V.2.1
+
+## Utilizando banco de dados relacional para persistir os dados
 - Utilize a seguinte sequencia de comandos no terminal:
 * npm install
 * npm run build
